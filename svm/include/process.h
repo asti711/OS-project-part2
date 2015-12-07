@@ -27,14 +27,16 @@ namespace svm
 
             Memory::ram_size_type memory_start_position;
             Memory::ram_size_type memory_end_position;
-
             Memory::ram_size_type sequential_instruction_count;
+            Memory::page_table_type *page_table;
 
             Process(
                 process_id_type id,
                 Memory::ram_size_type memory_start_position,
                 Memory::ram_size_type memory_end_position
             );
+
+            virtual ~Process();
 
             bool operator<(const Process &anotherProcess) const;
     };

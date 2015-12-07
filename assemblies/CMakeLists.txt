@@ -9,10 +9,13 @@ set(SVMASM_TARGET "svmasm")
 set(ASM_TARGET "assemblies")
 set(ASM_CPU_SAMPLE "change_registers_and_exit")
 set(ASM_SCHEDULER_SAMPLE "write_to_register_in_loop")
+set(ASM_VIRTUAL_MEMORY_SAMPLE "read_write_to_virtual_memory")
 set(ASM_SOURCES "${ASM_CPU_SAMPLE}.vmasm"
-                "${ASM_SCHEDULER_SAMPLE}.vmasm")
+                "${ASM_SCHEDULER_SAMPLE}.vmasm"
+                "${ASM_VIRTUAL_MEMORY_SAMPLE}.vmasm")
 set(ASM_TARGETS "${ASM_CPU_SAMPLE}.vmexe"
-                "${ASM_SCHEDULER_SAMPLE}.vmexe")
+                "${ASM_SCHEDULER_SAMPLE}.vmexe"
+                "${ASM_VIRTUAL_MEMORY_SAMPLE}.vmexe")
 
 add_custom_command(
     OUTPUT
@@ -38,6 +41,20 @@ add_custom_command(
     DEPENDS
         ${SVMASM_TARGET}
         "${ASM_SCHEDULER_SAMPLE}.vmasm"
+    WORKING_DIRECTORY
+        ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_custom_command(
+    OUTPUT
+        "${ASM_VIRTUAL_MEMORY_SAMPLE}.vmexe"
+    COMMAND
+        "${CMAKE_BINARY_DIR}/${SVMASM_TARGET}/${CMAKE_CFG_INTDIR}/${SVMASM_TARGET}"
+            "${CMAKE_CURRENT_SOURCE_DIR}/${ASM_VIRTUAL_MEMORY_SAMPLE}.vmasm"
+            "${ASM_VIRTUAL_MEMORY_SAMPLE}.vmexe"
+    DEPENDS
+        ${SVMASM_TARGET}
+        "${ASM_VIRTUAL_MEMORY_SAMPLE}.vmasm"
     WORKING_DIRECTORY
         ${CMAKE_CURRENT_BINARY_DIR}
 )

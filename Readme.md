@@ -49,8 +49,8 @@ SVMASM manually.
 SVM loads executables into memory and creates processes for each image. It then
 starts execution of the first process on the virtual CPU sequentally.
 
-Your task is to write implementation for each scheduler in `kernel.c` and
-`kernel.h`. Use approaches described in the course book.
+Your task is to write memory management components and hardware subsystems.
+Search for `TODO` comments in `svm` and `svmasm`.
 
 ### SVMASM
 

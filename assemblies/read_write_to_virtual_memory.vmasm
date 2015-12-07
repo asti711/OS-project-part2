@@ -1,0 +1,5 @@
+mov a 42
+st a 100
+ld b 100
+mov a 1
+int 1

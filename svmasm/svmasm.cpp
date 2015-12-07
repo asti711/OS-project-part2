@@ -6,10 +6,11 @@
 #include <algorithm>
 #include <cctype>
 
-static const char *MOV_OPCODE_TOKEN = "mov";
 static const char *REGISTER_A_TOKEN = "a";
 static const char *REGISTER_B_TOKEN = "b";
 static const char *REGISTER_C_TOKEN = "c";
+
+static const char *MOV_OPCODE_TOKEN = "mov";
 static const int MOVA_OPCODE = 0x10;
 static const int MOVB_OPCODE = 0x11;
 static const int MOVC_OPCODE = 0x12;
@@ -19,6 +20,28 @@ static const int JMP_OPCODE = 0x20;
 
 static const char *INT_OPCODE_TOKEN = "int";
 static const int INT_OPCODE = 0x30;
+
+/*
+ *  TODO:
+ *
+ *    Add instruction encoding for `ld` operations.
+ *
+ *      static const char *LD_OPCODE_TOKEN = "ld";
+ *      static const int LDA_OPCODE = 0x40;
+ *      static const int LDB_OPCODE = 0x41;
+ *      ...
+ */
+
+/*
+ *  TODO:
+ *
+ *    Add instruction encoding for `st` operations.
+ *
+ *      static const char *ST_OPCODE_TOKEN = "st";
+ *      static const int STA_OPCODE = 0x50;
+ *      static const int STB_OPCODE = 0x51;
+ *      ...
+ */
 
 // Converts assembly code to virtual CPU instructions
 //     `mov a 42` -> `0x10 0x2A`
@@ -108,6 +131,8 @@ int main(int argc, char *argv[])
                     if (!(tokens >> data)) {
                         std::cerr << "Invalid relative address."
                                   << std::endl;
+
+                        return -1;
                     }
 
                     ops.push_back(instruction);
@@ -127,6 +152,17 @@ int main(int argc, char *argv[])
                     ops.push_back(instruction);
                     ops.push_back(data);
                 }
+                /*
+                 *  TODO:
+                 *
+                 *      else if (token == LD_OPCODE_TOKEN) {
+                 *        // use code from the MOV branch as an example
+                 *        ...
+                 *    } else if (token == ST_OPCODE_TOKEN) {
+                 *        // use code from the MOV branch as an example
+                 *        ...
+                 *    }
+                 */
             }
 
             input_file.append(line);

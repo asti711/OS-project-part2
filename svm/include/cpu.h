@@ -33,6 +33,20 @@ namespace svm
                              JMP_OPCODE  = 0x20,
                              INT_OPCODE  = 0x30;
 
+            /*
+             * TODO:
+             *
+             *   Add CPU opcode constants for memory load and store
+             *   instructions.
+             *
+             *     static const int LDA_OPCODE = 0x40,
+             *                      LDB_OPCODE = 0x41,
+             *                      ...
+             *                      STA_OPCODE = 0x50,
+             *                      STB_OPCODE = 0x51
+             *                      ...
+             */
+
             Registers registers; // Current state of the CPU
 
             CPU(Memory &memory, PIC &pic);

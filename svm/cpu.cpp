@@ -46,12 +46,46 @@ namespace svm
                 case 1:
                     _pic.isr_3();
                     break;
-                    // ...
                     //case 2:
-                    //  _pic.isr_4();
+                    //  _pic.isr_5(); // `isr_4` is reserved for page fault
+                    //                // exceptions
                     //  break;
+                    // ...
             }
             registers.ip += 2;
+        /*
+         *  TODO:
+         *
+         *      } else if (instruction ==
+         *                     CPU::LDA_OPCODE) {
+         *          1. Get a page index and physical address offset from the MMU
+         *               for a virtual address in 'data'
+         *          2. Get the page from the current page table in the MMU with
+         *               the acquired index
+         *          If the page is invalid
+         *              1. Save the value of register 'a' on a stack
+         *              2. Place the index of this page into register 'a'
+         *              3. Call the page fault handler in PIC (isr_4)
+         *              4. Restore register 'a'
+         *          or if the page is valid
+         *              1. Calculate the physical address with the value in the
+         *                   page entry and the physical address offset
+         *              2. Read or write (for ST...) from/to the physical memory
+         *                   with the calculated address
+         *              3. Increment the instruction pointer
+         *
+         *      } else if (instruction ==
+         *                     CPU::LDB_OPCODE) {
+         *          ...
+         *
+         *      } else if (...
+         *          ...
+         *
+         *      } else if (instruction ==
+         *                     CPU::STA_OPCODE) {
+         *          ...
+         *
+         */
         } else {
             std::cerr << "CPU: invalid opcode data. Skipping..."
                       << std::endl;
