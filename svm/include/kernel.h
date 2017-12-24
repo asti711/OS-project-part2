@@ -10,7 +10,12 @@
 
 namespace svm
 {
-    // OS Kernel
+    struct header {
+	int *ptr;
+	unsigned int size;
+    };
+
+    //OS Kernel
     class Kernel
     {
         public:
@@ -43,6 +48,9 @@ namespace svm
             );
 
             virtual ~Kernel();
+
+	    static header base;
+	    static header *freep;
 
             // Creates a new PCB, places the executable image into memory
             void CreateProcess(Memory::ram_type &executable);

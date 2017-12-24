@@ -43,6 +43,17 @@ static const int INT_OPCODE = 0x30;
  *      ...
  */
 
+static const char *LD_OPCODE_TOKEN = "ld";
+static const int LDA_OPCODE = 0x40;
+static const int LDB_OPCODE = 0x41;
+static const int LDC_OPCODE = 0x42;
+
+static const char *ST_OPCODE_TOKEN = "st";
+static const int STA_OPCODE = 0x50;
+static const int STB_OPCODE = 0x51;
+static const int STC_OPCODE = 0x52;
+
+
 // Converts assembly code to virtual CPU instructions
 //     `mov a 42` -> `0x10 0x2A`
 
@@ -163,6 +174,84 @@ int main(int argc, char *argv[])
                  *        ...
                  *    }
                  */
+		else if (token == LD_OPCODE_TOKEN) {
+			int instruction, data;
+			if (tokens >> token) {
+				std::transform(
+				token.begin(),
+				token.end(),
+				token.begin(),
+				tolower
+				);
+				if (token == REGISTER_A_TOKEN) {
+					instruction = LDA_OPCODE;
+				}
+				else if (token == REGISTER_B_TOKEN) {
+					instruction = LDB_OPCODE;
+				}
+				else if (token == REGISTER_C_TOKEN) {
+					instruction = LDC_OPCODE;
+				}
+				else {
+					std::cerr << "Invalid register specifier."
+						<< std::endl;
+					return -1;
+				}
+				if (!(tokens >> data)) {
+					std::cerr << "Invalid immediate value."
+						<< std::endl;
+				return -1;
+				}
+
+				ops.push_back(instruction);
+				ops.push_back(data);
+			}
+			else {
+				std::cerr << "Invalid assembly statement."
+					<< std::endl;
+
+				return -1;
+			}
+		}
+		else if (token == ST_OPCODE_TOKEN) {
+			int instruction, data;
+			if (tokens >> token) {
+				std::transform(
+				token.begin(),
+				token.end(),
+				token.begin(),
+				tolower
+				);
+				if (token == REGISTER_A_TOKEN) {
+					instruction = STA_OPCODE;
+				}
+				else if (token == REGISTER_B_TOKEN) {
+					instruction = STB_OPCODE;
+				}
+				else if (token == REGISTER_C_TOKEN) {
+					instruction = STC_OPCODE;
+				}
+				else {
+					std::cerr << "Invalid register specifier."
+						<< std::endl;
+					return -1;
+				}
+
+				if (!(tokens >> data)) {
+					std::cerr << "Invalid immediate value."
+						<< std::endl;
+					return -1;
+				}
+
+				ops.push_back(instruction);
+				ops.push_back(data);
+			}
+			else {
+				std::cerr << "Invalid assembly statement."
+					<< std::endl;
+				return -1;
+			}
+		}
             }
 
             input_file.append(line);

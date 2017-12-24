@@ -26,6 +26,7 @@ namespace svm
             static const ram_size_type DEFAULT_RAM_SIZE = 0x10000; // 64 KB
             static const ram_size_type PAGE_SIZE        = 0x80;    // 128 B
             static const ram_size_type INVALID_PAGE     = 0;
+	    static const ram_size_type NUMBER_OF_PAGES	 = DEFAULT_RAM_SIZE / PAGE_SIZE;
 
             ram_type ram; // physical memory as a fixed size array
             page_table_type* page_table; // current process's page table used to
@@ -44,6 +45,10 @@ namespace svm
                     vmem_size_type virtual_address
                 );
 
+	    page_entry_type getPage(page_entry_type index);
+	    void memoryPush(page_entry_type a);
+	    page_entry_type memoryPop();
+
             // Tries to find an empty physical frame
             page_entry_type AcquireFrame();
             // Releases a frame into a pool of free frames
@@ -51,6 +56,7 @@ namespace svm
 
         private:
             // TODO: select a data structure for your frame allocator
+	    std::stack<page_entry_type> freePhisycalFrames;
     };
 }
 

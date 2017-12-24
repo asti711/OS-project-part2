@@ -47,6 +47,13 @@ namespace svm
              *                      ...
              */
 
+	     static const int LDA_OPCODE = 0x40,
+			      LDB_OPCODE = 0x41,
+			      LDC_OPCODE = 0x42,
+			      STA_OPCODE = 0x50,
+			      STB_OPCODE = 0x51,
+			      STC_OPCODE = 0x52;
+
             Registers registers; // Current state of the CPU
 
             CPU(Memory &memory, PIC &pic);
