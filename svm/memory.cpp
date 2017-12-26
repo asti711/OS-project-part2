@@ -6,8 +6,8 @@ namespace svm
         : ram(DEFAULT_RAM_SIZE)
     {
         // TODO: initialize data structures for the frame allocator
-	for (page_entry_type i = NUMBER_OF_PAGES-1; i >= 0; --i) {
-		freePhisycalFrames.push(i);
+	for (page_entry_type i = PAGE_SIZE; i < DEFAULT_RAM_SIZE; i += PAGE_SIZE) {
+		freePhysicalFrames.push(i);
 	}
     }
 
@@ -23,11 +23,12 @@ namespace svm
         */
 
         //return nullptr;
-	page_table_type emptyPageTable[NUMBER_OF_PAGES];
-	for (int i = 0; i < NUMBER_OF_PAGES; ++i) {
+	Memory::ram_size_type numberOfPages = DEFAULT_RAM_SIZE/PAGE_SIZE;
+	Memory::page_table_type emptyPageTable(numberOfPages);
+	for(Memory::ram_size_type i = 0; i < numberOfPages; ++i){
 		emptyPageTable[i] = INVALID_PAGE;
 	}
-	return emptyPageTable;
+	return &emptyPageTable;
     }
 
     Memory::page_index_offset_pair_type
@@ -51,24 +52,13 @@ namespace svm
         return result;
     }
 
-    Memory::page_entry_type Memory::getPage(Memory::page_entry_type index) {
-//   	return page_table[index];
-    }
-
-    void Memory::memoryPush(Memory::page_entry_type a) {
-    	freePhisycalFrames.push(a);
-    }
-
-    Memory::page_entry_type Memory::memoryPop() {
-//	return freePhisycalFrames.pop();
-    }
-
     Memory::page_entry_type Memory::AcquireFrame()
     {
         // TODO: find a new free frame (you can use a bitmap or stack)
-
-	if (freePhisycalFrames.size() != 0) {
-//		return freePhisycalFrames.pop();
+	if(!freePhysicalFrames.empty()) {
+		page_entry_type result = freePhysicalFrames.top();
+		freePhysicalFrames.pop();
+		return result;
 	}
 
         return INVALID_PAGE;
@@ -77,6 +67,6 @@ namespace svm
     void Memory::ReleaseFrame(page_entry_type page)
     {
         // TODO: free the physical frame (you can use a bitmap or stack)
-	freePhisycalFrames.push(page);
+	freePhysicalFrames.push(page);
     }
 }

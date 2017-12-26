@@ -27,7 +27,10 @@ namespace svm
          *     Initialize data structures for methods `AllocateMemory` and
          *       `FreeMemory`
          */
-	freep = NULL;
+	freep = 0;
+
+	board.memory.ram[0] = freep;
+	board.memory.ram[1] = board.memory.ram.size() - 2;
 
         // Process page faults (find empty frames)
         board.pic.isr_4 = [&]() {
@@ -48,10 +51,10 @@ namespace svm
              *              Notify the process or stop the board (out of
              *              physical memory)
              */
-	     Memory::page_table_size_type faultingPageIndex = board.cpu.registers.a;
+	     Memory::page_entry_type pageIndex = board.cpu.registers.a;
 	     Memory::page_entry_type newFrame = board.memory.AcquireFrame();
 	     if (newFrame != Memory::INVALID_PAGE) {
-		board.memory.page_table[faultingPageIndex] = newFrame;
+		(*(board.memory.page_table))[pageIndex] = newFrame;
 	     }
 	     else {
 		board.Stop();
@@ -85,9 +88,26 @@ namespace svm
          *      to release data in RAM or virtual memory
          */
 
-	board.cpu.Step();
-	processes[0].state = Process::States::Running;
-	board.memory.page_table = processes[0].page_table;
+	if(!processes.empty() && scheduler != Priority ) {
+
+		std::cout << "The process " << _current_process_index <<", has been set for the execution." << std::endl;
+
+		board.cpu.registers = processes[_current_process_index].registers;
+		board.memory.page_table = processes[_current_process_index].page_table;
+
+		processes[_current_process_index].state = Process::States::Running;
+
+	}
+	else if (!priorities.empty() && scheduler == Priority) {
+
+		std::cout << "The process " << priorities[_current_process_index].id << ", has been set for the execution." << std::endl;
+
+		board.cpu.registers = priorities[_current_process_index].registers;
+		board.memory.page_table = priorities[_current_process_index].page_table;
+
+		priorities[_current_process_index].state = Process::States::Running;
+
+	}
 
         if (scheduler == FirstComeFirstServed) {
             board.pic.isr_0 = [&]() {
@@ -97,17 +117,17 @@ namespace svm
             board.pic.isr_3 = [&]() {
                 // ToDo: Process the first software interrupt for the FCFS
 
-                // Unload the current process
-		std::cout << "Number of Processes left = " << processes.size() << std::endl;
+                std::cout << "Number of Processes left = " << processes.size() << std::endl;
 
-		FreeMemory(processes.front.memory_start_position);
-		processes.pop_front();
+		FreeMemory(processes[_current_process_index].memory_start_position);
+		processes.erase(processes.begin() + _current_process_index);
 		if (processes.empty()) {
 			board.Stop();
 		}
 		else {
-			board.cpu.registers = processes[0].registers;
-			processes[0].state = Process::States::Running;
+			board.cpu.registers = processes[_current_process_index].registers;
+			board.memory.page_table = processes[_current_process_index].page_table;
+			processes[_current_process_index].state = Process::States::Running;
 		}
             };
         } else if (scheduler == ShortestJob) {
@@ -123,14 +143,15 @@ namespace svm
                 // Unload the current process
 		std::cout << "Number of Processes left = " << processes.size() << std::endl;
 
-		FreeMemory(processes.front.memory_start_position);
-		processes.pop_front();
+		FreeMemory(processes[_current_process_index].memory_start_position);
+		processes.erase(processes.begin() + _current_process_index);
 		if (processes.empty()) {
 			board.Stop();
 		}
 		else {
-			board.cpu.registers = processes[0].registers;
-			processes[0].state = Process::States::Running;
+			board.cpu.registers = processes[_current_process_index].registers;
+			board.memory.page_table = processes[_current_process_index].page_table;
+			processes[_current_process_index].state = Process::States::Running;
 		}
             };
         } else if (scheduler == RoundRobin) {
@@ -144,16 +165,17 @@ namespace svm
 		std::cout << std::endl;
 		_cycles_passed_after_preemption++;
 		if (_cycles_passed_after_preemption > _MAX_CYCLES_BEFORE_PREEMPTION) {
-			_cycles_passed_after_preemption = 0;
+			process_list_type::size_type next_process_index = (_current_process_index + 1)% processes.size();
 
 			processes[_current_process_index].registers = board.cpu.registers;
 			processes[_current_process_index].state = Process::States::Ready;
-			_current_process_index++;
-			if (_current_process_index >= processes.size()) {
-				_current_process_index = 0;
-			}
+
+			_current_process_index = next_process_index;
+
 			board.cpu.registers = processes[_current_process_index].registers;
+			board.memory.page_table = processes[_current_process_index].page_table;
 			processes[_current_process_index].state = Process::States::Running;
+			_cycles_passed_after_preemption = 0;
 		}
             };
 
@@ -174,6 +196,7 @@ namespace svm
 				_current_process_index = 0;
 			}
 			board.cpu.registers = processes[_current_process_index].registers;
+			board.memory.page_table = processes[_current_process_index].page_table;
 			processes[_current_process_index].state = Process::States::Running;
 		}
             };
@@ -181,28 +204,31 @@ namespace svm
             board.pic.isr_0 = [&]() {
                 // ToDo: Process the timer interrupt for the Priority Queue
                 //  scheduler
-		std::cout << "Priority of the current process = " << priorities.top().priority << "\t Cycles = " << priorities.top()._DYNAMIC_MAX_CYCLES_BEFORE_PREEMPTION << std::endl;
+		std::cout << "Priority of the current process = " << priorities[0].priority << "\t Cycles = " << _MAX_CYCLES_BEFORE_PREEMPTION << std::endl;
 
-		_cycles_passed_after_preemption++;
-		if (_cycles_passed_after_preemption > priorities.top()._DYNAMIC_MAX_CYCLES_BEFORE_PREEMPTION) {
+		for (unsigned int i = 1; i < priorities.size(); ++i){
+			priorities[i].priority++;
+		}
+
+		process_list_type::size_type next_process_index = (_current_process_index + 1)% priorities.size();
+
+		if (priorities[_current_process_index].priority < priorities[next_process_index].priority) {
+			priorities[_current_process_index].registers = board.cpu.registers;
+			priorities[_current_process_index].state = Process::States::Ready;
+
+			for(unsigned int i = 1; i < priorities.size(); ++i){
+				int j = i - 1;
+				Process temp = priorities[i];
+				while(j >=0 && priorities[j].priority < temp.priority){
+					priorities[j+1] = priorities[j];
+					j--;
+				}
+				priorities[j+1] = temp;
+			}
+			board.cpu.registers = priorities[_current_process_index].registers;
+			board.memory.page_table = priorities[_current_process_index].page_table;
+			priorities[_current_process_index].state = Process::States::Running;
 			_cycles_passed_after_preemption = 0;
-			Process temp = priorities.top();
-			temp.registers = board.cpu.registers;
-			temp.state = Process::States::Ready;
-			priorities.pop();
-			if (temp.priority > 0) {
-				temp.priority--;
-				temp.updateCycles();
-			}
-			priorities.push(temp);
-			if (priorities.empty()) {
-				board.Stop();
-			}
-			else {
-				Process t = priorities.top();
-				board.cpu.registers = t.registers;
-				t.state = Process::States::Running;
-			}
 		}
             };
 
@@ -213,26 +239,19 @@ namespace svm
                 // Unload the current process
 		std::cout << "Number of Processes left = " << processes.size() << std::endl;
 
-		if (board.cpu.registers.a == 1) {
-			FreeMemory(priorities.top.memory_start_position);
-			priorities.pop();
-			if (priorities.empty()) {
-				board.Stop();
-			}
-			else {
-				Process t = priorities.top();
-				board.cpu.registers = t.registers;
-				priorities.pop();
-				t.state = Process::States::Running;
-				priorities.push(t);
-			}
+		FreeMemory(priorities.front().memory_start_position);
+		priorities.pop_front();
+
+		if (priorities.empty()) {
+			board.Stop();
 		}
-		else if (board.cpu.registers.a == 2) {
-			Process t = priorities.top();
-			FreeMemory(priorities.top.memory_start_position);
-			priorities.pop();
-			t.priority = board.cpu.registers.b;
-			priorities.push(t);
+		else {
+			if (_current_process_index >= priorities.size()) {
+				_current_process_index = 0;
+			}
+			board.cpu.registers = priorities[_current_process_index].registers;
+			board.memory.page_table = priorities[_current_process_index].page_table;
+			priorities[_current_process_index].state = Process::States::Running;
 		}
             };
         }
@@ -244,11 +263,7 @@ namespace svm
 
     void Kernel::CreateProcess(Memory::ram_type &executable)
     {
-        Memory::ram_size_type
-            new_memory_position = -1; // TODO:
-                                      //   allocate memory for the process
-                                      //   with `AllocateMemory`
-	new_memory_position = AllocateMemory(new_memory_position);
+        Memory::ram_size_type new_memory_position = AllocateMemory(executable.size());
 
 	if (new_memory_position == -1) {
             std::cerr << "Kernel: failed to allocate memory."
@@ -287,24 +302,28 @@ namespace svm
 
             // ToDo: add the new process to an appropriate data structure
             //processes.push_back(process);
-
+	    srand (time(NULL));
+	    process.priority = rand() % (processes.size() + 1) + 1;
             // ToDo: process the data structure (e.g., sort if necessary)
 
             if (scheduler == Priority) {
-		if (board.cpu.registers.a = 2) {
-			process.priority = board.cpu.registers.b;
-		}
-		board.cpu.registers.a = 1;
-		priorities.push(process);
-	     }
-	     else if (scheduler == ShortestJob) {
-		processes.push_back(process);
-		std::sort(processes.begin(), processes.end(), [](const Process &a, const Process &b) {
-			return a.sequential_instruction_count > b.sequential_instruction_count;
-		});
+		priorities.push_back(process);
+		std::sort (priorities.begin(), priorities.end());
 	     }
 	     else {
 	 	processes.push_back(process);
+	     }
+
+	     if (scheduler == ShortestJob) {
+		for(int i = 1; i < processes.size(); ++i){
+			int j = i - 1;
+			Process temp = processes[i];
+			while(j >= 0 && processes[j].sequential_instruction_count > temp.sequential_instruction_count){
+				processes[j+1] = processes[j];
+				j--;
+			}
+			processes[j+1] = temp;
+		}
 	     }
         }
     }
@@ -327,29 +346,26 @@ namespace svm
          *      subsystem.
          */
 
-        //return -1;
-	header *p, *prevp;
-	unsigned nunits = (units + sizeof(long) - 1) / sizeof(long) + 1;
-	if ((prevp = freep) == NULL) {
-		base.ptr = &base;
-		base.size = 0;
-	}
-	for (p = prevp->ptr; ; prevp = p, p = p->ptr) {
-		if (p->size >= nunits) {
-			if (p->size == nunits)
-				prevp->ptr = p->ptr;
-			else {
-				p->size -= nunits;
-				p += p->size;
-				p->size = nunits;
+        Memory::ram_size_type p, prevp = freep;
+
+	for (p = board.memory.ram[prevp]; ; prevp = p, p = board.memory.ram[p]) {
+		if(board.memory.ram[p+1] >= units){
+			if(board.memory.ram[p+1] == units) {
+				board.memory.ram[prevp] = board.memory.ram[p];
 			}
+			else {
+				board.memory.ram[p + 1] -= units + 2;
+				p += board.memory.ram[p + 1];
+				board.memory.ram[p+1] = units;
+			}
+
 			freep = prevp;
-			return *(p + 1);
+			return  p+2;
 		}
-		if (p == freep) {
+		if(p == freep)
 			return -1;
-		}
 	}
+        return -1;
     }
 
     void Kernel::FreeMemory(
@@ -368,23 +384,27 @@ namespace svm
          *    Task 2: adapt the algorithm to work with your virtual memory
          *      subsystem
          */
-	header *bp, *p;
-	for (p = freep; !(bp > p && bp < p->ptr); p = p->ptr) {
-		if (p >= p->ptr && (bp > p || bp < p->ptr))
-			break; /* freed block at start or end of arena */
+	Memory::ram_size_type p = freep;
+	Memory::ram_size_type bp = physical_address - 2;
+
+	for(; !(bp > p && bp < board.memory.ram[p]); p = board.memory.ram[p]) {
+		if(p >= board.memory.ram[p] && (bp > p || bp < board.memory.ram[p])) {
+			break;
+		}
 	}
-	if (bp + bp->size == p-.ptr) { /* join to upper nbr */
-		bp->size += p->ptr->s.size;
-		bp->ptr = p->ptr->s.ptr;
-	}
-	else
-		bp->ptr = p->ptr;
-	if (p + p->size == bp) { /* join to lower nbr */
-		p->size += bp->size;
-		p->ptr = bp->ptr;
+	if(bp + board.memory.ram[bp+1] == board.memory.ram[p]) {
+		board.memory.ram[bp+1] += board.memory.ram[board.memory.ram[p+1]];
+		board.memory.ram[bp] = board.memory.ram[board.memory.ram[p]];
 	}
 	else {
-		p->ptr = bp;
+		board.memory.ram[bp] = board.memory.ram[p];
+	}
+	if(p + board.memory.ram[p+1] == bp) {
+		board.memory.ram[p+1] += board.memory.ram[bp+1];
+		board.memory.ram[p] = board.memory.ram[bp];
+	}
+	else {
+		board.memory.ram[p] = bp;
 	}
 	freep = p;
     }

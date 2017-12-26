@@ -10,11 +10,6 @@
 
 namespace svm
 {
-    struct header {
-	int *ptr;
-	unsigned int size;
-    };
-
     //OS Kernel
     class Kernel
     {
@@ -29,7 +24,7 @@ namespace svm
             };
 
             typedef std::deque<Process> process_list_type;
-            typedef std::priority_queue<Process> process_priorities_type;
+            typedef std::deque<Process> process_priorities_type;
 
             Board board;
 
@@ -48,9 +43,6 @@ namespace svm
             );
 
             virtual ~Kernel();
-
-	    static header base;
-	    static header *freep;
 
             // Creates a new PCB, places the executable image into memory
             void CreateProcess(Memory::ram_type &executable);
@@ -82,6 +74,8 @@ namespace svm
 
             Process::process_id_type _last_issued_process_id;
             Memory::ram_type::size_type _last_ram_position;
+
+	    Memory::ram_size_type freep;
 
             unsigned int _cycles_passed_after_preemption;
             process_list_type::size_type _current_process_index;

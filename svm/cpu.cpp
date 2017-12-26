@@ -88,92 +88,102 @@ namespace svm
          *
          */
 	else if (instruction == CPU::LDA_OPCODE) {
-		Memory::page_index_offset_pair_type indexAndOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
-		Memory::page_table_size_type page = _memory.getPage(indexAndOffset.first);
-		if (page == Memory::INVALID_PAGE) {
-			_memory.memoryPush(registers.a);
-			registers.a = page;
+		Memory::page_index_offset_pair_type indexOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
+		Memory::page_entry_type frame = _memory.page_table->at(indexOffset.first);
+
+		if(frame == Memory::INVALID_PAGE) {
+			int temp = registers.a;
+			registers.a = indexOffset.first;
 			_pic.isr_4();
-			registers.a = _memory.memoryPop();
+			registers.a = temp;
 		}
 		else {
-			Memory::ram_size_type address = indexAndOffset.second * Memory::PAGE_SIZE;
-			registers.a = _memory.ram[address];
+			registers.a = _memory.ram[frame + indexOffset.second];
+			registers.ip += 2;
 			++instruction;
 		}
 	}
 	else if (instruction == CPU::LDB_OPCODE) {
-		Memory::page_index_offset_pair_type indexAndOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
-		Memory::page_table_size_type page = _memory.getPage(indexAndOffset.first);
-		if (page == Memory::INVALID_PAGE) {
-			_memory.memoryPush(registers.b);
-			registers.b = page;
+		Memory::page_index_offset_pair_type indexOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
+		Memory::page_entry_type frame = _memory.page_table->at(indexOffset.first);
+
+
+		if(frame == Memory::INVALID_PAGE) {
+			int temp = registers.b;
+			registers.b = indexOffset.first;
 			_pic.isr_4();
-			registers.b = _memory.memoryPop();
+			registers.b = temp;
 		}
 		else {
-			Memory::ram_size_type address = indexAndOffset.second * Memory::PAGE_SIZE;
-			registers.a = _memory.ram[address];
+			registers.b = _memory.ram[frame + indexOffset.second];
+			registers.ip += 2;
 			++instruction;
 		}
 	}
 	else if (instruction == CPU::LDC_OPCODE) {
-		Memory::page_index_offset_pair_type indexAndOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
-		Memory::page_table_size_type page = _memory.getPage(indexAndOffset.first);
-		if (page == Memory::INVALID_PAGE) {
-			_memory.memoryPush(registers.c);
-			registers.c = page;
+		Memory::page_index_offset_pair_type indexOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
+		Memory::page_entry_type frame = _memory.page_table->at(indexOffset.first);
+
+
+		if(frame == Memory::INVALID_PAGE) {
+			int temp = registers.c;
+			registers.c = indexOffset.first;
 			_pic.isr_4();
-			registers.c = _memory.memoryPop();
-		}
-		else {
-			Memory::ram_size_type address = indexAndOffset.second * Memory::PAGE_SIZE;
-			registers.c = _memory.ram[address];
+			registers.c = temp;
+		} else {
+			registers.c = _memory.ram[frame + indexOffset.second];
+			registers.ip += 2;
 			++instruction;
 		}
 	}
 	else if (instruction == CPU::STA_OPCODE) {
-		Memory::page_index_offset_pair_type indexAndOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
-		Memory::page_table_size_type page = _memory.getPage(indexAndOffset.first);
-		if (page == Memory::INVALID_PAGE) {
-			_memory.memoryPush(registers.a);
-			registers.a = page;
+		Memory::page_index_offset_pair_type indexOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
+		Memory::page_entry_type frame = _memory.page_table->at(indexOffset.first);
+
+
+		if(frame == Memory::INVALID_PAGE) {
+			int temp = registers.a;
+			registers.a = indexOffset.first;
 			_pic.isr_4();
-			registers.a = _memory.memoryPop();
+			registers.a = temp;
 		}
 		else {
-			Memory::ram_size_type address = indexAndOffset.second * Memory::PAGE_SIZE;
-			_memory.ram[address] = registers.a;
+			_memory.ram[frame + indexOffset.second] = registers.a;
+			registers.ip += 2;
 			++instruction;
 		}
 	}
 	else if (instruction == CPU::STB_OPCODE) {
-		Memory::page_index_offset_pair_type indexAndOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
-		Memory::page_table_size_type page = _memory.getPage(indexAndOffset.first);
-		if (page == Memory::INVALID_PAGE) {
-			_memory.memoryPush(registers.b);
-			registers.b = page;
+		Memory::page_index_offset_pair_type indexOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
+		Memory::page_entry_type frame = _memory.page_table->at(indexOffset.first);
+
+
+		if(frame == Memory::INVALID_PAGE) {
+			int temp = registers.b;
+			registers.b = indexOffset.first;
 			_pic.isr_4();
-			registers.b = _memory.memoryPop();
+			registers.b = temp;
 		}
 		else {
-			Memory::ram_size_type address = indexAndOffset.second * Memory::PAGE_SIZE;
-			_memory.ram[address] = registers.b;
+			_memory.ram[frame + indexOffset.second] = registers.b;
+			registers.ip += 2;
 			++instruction;
 		}
 	}
 	else if (instruction == CPU::STC_OPCODE) {
-		Memory::page_index_offset_pair_type indexAndOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
-		Memory::page_table_size_type page = _memory.getPage(indexAndOffset.first);
-		if (page == Memory::INVALID_PAGE) {
-			_memory.memoryPush(registers.c);
-			registers.c = page;
+		Memory::page_index_offset_pair_type indexOffset = _memory.GetPageIndexAndOffsetForVirtualAddress(data);
+		Memory::page_entry_type frame = _memory.page_table->at(indexOffset.first);
+
+
+		if(frame == Memory::INVALID_PAGE) {
+			int temp = registers.c;
+			registers.c = indexOffset.first;
 			_pic.isr_4();
-			registers.c = _memory.memoryPop();
+			registers.c = temp;
 		}
 		else {
-			Memory::ram_size_type address = indexAndOffset.second * Memory::PAGE_SIZE;
-			_memory.ram[address] = registers.c;
+			_memory.ram[frame + indexOffset.second] = registers.c;
+			registers.ip += 2;
 			++instruction;
 		}
 	}
